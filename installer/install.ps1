@@ -7,10 +7,10 @@ if(!(Test-Path $BrawlhallaPath\META-INF\AIR\extensions\MultiKeyboard\ -pathType 
 	cp -r MultiKeyboard $BrawlhallaPath\META-INF\AIR\extensions\
 }
 $xmlpath = "$BrawlhallaPath\META-INF\AIR\application.xml"
-[xml]$ApplicationXml = Get-Content -Path $BrawlhallaPath\META-INF\AIR\application.xml
+[xml]$ApplicationXml = Get-Content -Path $xmlpath
 if(!($ApplicationXml.application.extensions.extensionID.Contains("MultiKeyboard"))) {
 	echo "Patching XML"
-	cp $xmlpath $xmlpath.mk_bak
+	cp $xmlpath "${xmlpath}.mk_bak"
 	$ee = $ApplicationXml.CreateElement("extensionID", $ApplicationXml.application.NamespaceURI)
 	$ee.InnerText = "MultiKeyboard"
 	$ApplicationXml.application.extensions.AppendChild($ee)
