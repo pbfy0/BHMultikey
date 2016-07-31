@@ -1,5 +1,6 @@
 package
 {
+	//import BML.Launcher;
 	import flash.external.ExtensionContext;
 	
 	public class RawKeyboard
@@ -9,14 +10,21 @@ package
 		
 		public var mKeyboardID:uint;
 		
+		private var i:uint;
+		
 		public function RawKeyboard(param1:uint, param2:ExtensionContext)
 		{
 			super();
 			mKeyboardID = param1;
 			mExtensionContext = param2;
+			//i = 0;
 		}
 		
 		public function GetDownState(param1:Boolean) : uint {
+			/*i = (i + 1) % 120;
+			if (i == 0) {
+				Launcher.Log("Got state from " + mKeyboardID);
+			}*/
 			return mExtensionContext.call("MultiKeyboard_GetDownState",mKeyboardID,param1) as uint;
 		}
 		

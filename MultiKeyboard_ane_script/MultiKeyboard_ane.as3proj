@@ -56,7 +56,7 @@
   </libraryPaths>
   <!-- External Libraries -->
   <externalLibraryPaths>
-    <!-- example: <element path="..." /> -->
+    <element path="C:\Users\Paul\Documents\GitHub\BMF\LauncherLib\bin\Release\LauncherLib.swc" />
   </externalLibraryPaths>
   <!-- Runtime Shared Libraries -->
   <rslPaths>

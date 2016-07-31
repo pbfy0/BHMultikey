@@ -6,6 +6,7 @@ RawKeyboard::RawKeyboard(HANDLE h)
 {
 	handle = h;
 	id = 0;
+	//i = 0;
 	/*unsigned size;
 	GetRawInputDeviceInfo(h, RIDI_DEVICENAME, nullptr, &size);
 	wchar_t *name = new wchar_t[size];
@@ -42,6 +43,12 @@ void RawKeyboard::tick()
 
 unsigned RawKeyboard::get_down_state(bool is_ui)
 {
+	/*i = (i + 1) % 60;
+	if (i == 0) {
+		wchar_t msg[100];
+		_snwprintf_s(msg, 100, _TRUNCATE, L"getting id %d", id);
+		OutputDebugString(msg);
+	}*/
 	return is_ui ? ui_state : g_state;
 }
 
@@ -70,6 +77,9 @@ std::string RawKeyboard::get_name()
 
 void RawKeyboard::handle_input(uint32_t key, bool down)
 {
+	/*wchar_t msg[100];
+	_snwprintf_s(msg, 100, _TRUNCATE, L"id %d key %d down %d", id, key, down);
+	OutputDebugString(msg);*/
 	if (down) {
 		frame_action |= ui_map[key];
 		ui_state |= ui_map[key];

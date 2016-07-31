@@ -144,9 +144,13 @@ unsigned MultiKeyboard::activate()
 {
 	RawKeyboard *kb = unassigned_kbs.front();
 	unassigned_kbs.pop();
+
 	
 	kbs.push_back(kb);
 	unsigned id = kbs.size();
+	wchar_t x[100];
+	_snwprintf_s(x, 100, _TRUNCATE, L"Assigned id %d to handle %p", id, kb->handle);
+	OutputDebugString(x);
 	kb->id = id;
 	return id;
 }
@@ -170,8 +174,8 @@ unsigned MultiKeyboard::tick_messages()
 
 unsigned MultiKeyboard::get_down_state(uint32_t kbd_id, bool is_ui)
 {
-	if(!has_focus) return 0;
-	return kbs[kbd_id - 1]->get_down_state(is_ui);
+	if (!has_focus) return 0;
+	return kbs[kbd_id - 1/*is_ui ? id : (n_kbs - 1) - id*/]->get_down_state(is_ui);
 }
 
 unsigned MultiKeyboard::get_frame_action(uint32_t kbd_id)

@@ -14,7 +14,7 @@
     </define>
     <define append="true">
       <name>CONFIG::timeStamp</name>
-      <value>"7/30/2016"</value>
+      <value>"7/31/2016"</value>
     </define>
     <define append="true">
       <name>CONFIG::air</name>
@@ -30,8 +30,11 @@
     </define>
     <verbose-stacktraces>true</verbose-stacktraces>
     <source-path append="true">
-      <path-element>C:\Users\Paul\Documents\FlashDevelop\MultiKeyboard_ane\src</path-element>
+      <path-element>C:\Users\Paul\Documents\GitHub\BHMultikey\MultiKeyboard_ane_script\src</path-element>
       <path-element>C:\Program Files (x86)\FlashDevelop\Library\AS3\classes</path-element>
     </source-path>
+    <external-library-path append="true">
+      <path-element>C:\Users\Paul\Documents\GitHub\BMF\LauncherLib\bin\Release\LauncherLib.swc</path-element>
+    </external-library-path>
   </compiler>
 </flex-config>
