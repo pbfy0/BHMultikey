@@ -1,0 +1,13 @@
+<extension xmlns="http://ns.adobe.com/air/extension/2.5"> 
+	<id>MultiKeyboard</id>
+	<versionNumber>0.0.1</versionNumber>
+	<platforms>
+		<platform name="Windows-x86">
+			<applicationDeployment>
+				<nativeLibrary>MultiKeyboard.dll</nativeLibrary>
+				<initializer>ExtensionInitializer</initializer>
+				<finalizer>ExtensionFinalizer</finalizer>
+			</applicationDeployment>
+		</platform>
+	</platforms>
+</extension>
