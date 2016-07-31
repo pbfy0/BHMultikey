@@ -4,6 +4,7 @@
 #include <vector>
 #include <map>
 #include <queue>
+#include <future>
 
 #include "RawKeyboard.h"
 class MultiKeyboard
@@ -13,7 +14,7 @@ public:
 	~MultiKeyboard();
 
 	void handle_raw_input(HRAWINPUT ri);
-	void c_init();
+	bool c_init();
 
 	bool init();
 	unsigned activate();
@@ -26,10 +27,14 @@ public:
 	std::string get_name(uint32_t kbd_id);
 	bool enum_proc_callback(HWND hwnd);
 private:
+	RawKeyboard * add_kbd(HANDLE h);
+
 	std::vector<RawKeyboard *> kbs;
 	std::map<HANDLE, RawKeyboard *> h_kbs;
 	std::queue<RawKeyboard *> unassigned_kbs;
+
 	DWORD pid;
+	ATOM wclAtom;
 	HWND air_hwnd;
 	HWND hwnd;
 	bool has_focus;

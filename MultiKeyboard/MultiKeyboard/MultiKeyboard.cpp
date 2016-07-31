@@ -1,5 +1,5 @@
 #include <Windows.h>
-#include <functional>
+#include <future>
 
 #include "MultiKeyboard.h"
 #include "dllMain.h"
@@ -24,14 +24,19 @@ LRESULT CALLBACK _wnd_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
 
 MultiKeyboard::MultiKeyboard()
 {
+	hwnd = 0;
+	wclAtom = 0;
 }
 
 
 MultiKeyboard::~MultiKeyboard()
 {
+	if(hwnd) DestroyWindow(hwnd);
+	if(wclAtom) UnregisterClass((LPCWSTR)wclAtom, dll_module);
 }
 
-void MultiKeyboard::handle_raw_input(HRAWINPUT ri) {
+void MultiKeyboard::handle_raw_input(HRAWINPUT ri)
+{
 	UINT bufferSize;
 	GetRawInputData(ri, RID_INPUT, NULL, &bufferSize, sizeof(RAWINPUTHEADER));
 	LPBYTE dataBuffer = new BYTE[bufferSize];
@@ -45,19 +50,24 @@ void MultiKeyboard::handle_raw_input(HRAWINPUT ri) {
 
 	RawKeyboard *rk;
 	if (h_kbs.find(dev) == h_kbs.end()) {
-		rk = new RawKeyboard(dev);
-		h_kbs[dev] = rk;
-		unassigned_kbs.push(rk);
-	}
-	else {
+		rk = add_kbd(dev);
+	} else {
 		rk = h_kbs[dev];
 	}
 	rk->handle_input(virtualKeyCode, keyPressed);
 }
 
+RawKeyboard * MultiKeyboard::add_kbd(HANDLE h)
+{
+	RawKeyboard *rk = new RawKeyboard(h);
+	h_kbs[h] = rk;
+	unassigned_kbs.push(rk);
+	return rk;
+}
 
 
-void MultiKeyboard::c_init()
+
+bool MultiKeyboard::c_init()
 {
 	WNDCLASS wcl;
 	wcl.style = CS_OWNDC;
@@ -71,7 +81,8 @@ void MultiKeyboard::c_init()
 	wcl.lpszMenuName = NULL;
 	wcl.lpszClassName = L"MultiKeyboard capture";
 
-	ATOM wclAtom = RegisterClass(&wcl);
+	wclAtom = RegisterClass(&wcl);
+	if (wclAtom == 0) return false;
 
 	hwnd = CreateWindow(
 		(LPWSTR)wclAtom,
@@ -84,12 +95,26 @@ void MultiKeyboard::c_init()
 		dll_module,
 		NULL);
 
+	if (hwnd == nullptr) return false;
+
 	RAWINPUTDEVICE input_device[1];
 	input_device[0].usUsagePage = 1;
 	input_device[0].usUsage = 6;
 	input_device[0].dwFlags = RIDEV_INPUTSINK;
 	input_device[0].hwndTarget = hwnd;
-	RegisterRawInputDevices(input_device, 1, sizeof(input_device[0]));
+	bool res = RegisterRawInputDevices(input_device, 1, sizeof(input_device[0]));
+	if (!res) return false;
+
+	/*unsigned n_devices;
+	GetRawInputDeviceList(nullptr, &n_devices, sizeof(RAWINPUTDEVICELIST));
+	RAWINPUTDEVICELIST *list = new RAWINPUTDEVICELIST[n_devices];
+	GetRawInputDeviceList(list, &n_devices, sizeof(RAWINPUTDEVICELIST));
+	for (int i = 0; i < n_devices; i++) {
+		if (list[i].dwType == RIM_TYPEKEYBOARD) {
+			add_kbd(list[i].hDevice);
+		}
+	}*/
+	return true;
 }
 
 bool MultiKeyboard::enum_proc_callback(HWND hwnd) {
@@ -101,7 +126,6 @@ bool MultiKeyboard::enum_proc_callback(HWND hwnd) {
 		GetClassName(hwnd, buf, 32);
 		if (wcsncmp(cls, buf, 32) == 0) {
 			this->air_hwnd = hwnd;
-			c_init();
 			return false;
 		}
 	}
@@ -112,7 +136,8 @@ bool MultiKeyboard::init()
 {
 	pid = GetCurrentProcessId();
 	EnumWindows(_enum_proc_callback, (LPARAM)this);
-	return true;
+
+	return c_init();
 }
 
 unsigned MultiKeyboard::activate()
@@ -134,7 +159,7 @@ unsigned MultiKeyboard::tick_messages()
 		return 1;
 	}*/
 
-	has_focus = (GetActiveWindow() == air_hwnd);
+	has_focus = (GetActiveWindow() == air_hwnd || air_hwnd == 0);
 
 	for (auto const& val : kbs) {
 		val->tick();

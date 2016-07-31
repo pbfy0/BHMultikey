@@ -9,7 +9,8 @@ MultiKeyboard *mk_instance = nullptr;
 HMODULE dll_module = nullptr;
 
 FREObject mk_init(FREContext ctx, void *funcData, uint32_t argc, FREObject argv[]) {
-	assert(argc == 0);
+	//assert(argc == 0);
+	if (argc != 0) return nullptr;
 
 	FREObject ret;
 	FRENewObjectFromBool(mk_instance->init(), &ret);
@@ -17,7 +18,8 @@ FREObject mk_init(FREContext ctx, void *funcData, uint32_t argc, FREObject argv[
 }
 
 FREObject mk_activate(FREContext ctx, void *funcData, uint32_t argc, FREObject argv[]) {
-	assert(argc == 0);
+	//assert(argc == 0);
+	if (argc != 0) return nullptr;
 
 	FREObject ret;
 	FRENewObjectFromUint32(mk_instance->activate(), &ret);
@@ -25,7 +27,8 @@ FREObject mk_activate(FREContext ctx, void *funcData, uint32_t argc, FREObject a
 }
 
 FREObject mk_tickmessages(FREContext ctx, void *funcData, uint32_t argc, FREObject argv[]) {
-	assert(argc == 0);
+	//assert(argc == 0);
+	if (argc != 0) return nullptr;
 
 	FREObject ret;
 	FRENewObjectFromUint32(mk_instance->tick_messages(), &ret);
@@ -33,15 +36,16 @@ FREObject mk_tickmessages(FREContext ctx, void *funcData, uint32_t argc, FREObje
 }
 
 FREObject mk_getdownstate(FREContext ctx, void *funcData, uint32_t argc, FREObject argv[]) {
-	assert(argc == 2);
+	//assert(argc == 2);
+	if (argc != 2) return nullptr;
 
 	FREResult res;
 	uint32_t kbd_id;
 	res = FREGetObjectAsUint32(argv[0], &kbd_id);
-	// error handling
+	if (res != FRE_OK) return nullptr;
 	uint32_t is_ui;
 	res = FREGetObjectAsBool(argv[1], &is_ui);
-	// error handling
+	if (res != FRE_OK) return nullptr;
 
 	FREObject ret;
 	FRENewObjectFromUint32(mk_instance->get_down_state(kbd_id, (bool)is_ui), &ret);
@@ -49,12 +53,13 @@ FREObject mk_getdownstate(FREContext ctx, void *funcData, uint32_t argc, FREObje
 }
 
 FREObject mk_getframeaction(FREContext ctx, void *funcData, uint32_t argc, FREObject argv[]) {
-	assert(argc == 1);
+	//assert(argc == 1);
+	if (argc != 1) return nullptr;
 
 	FREResult res;
 	uint32_t kbd_id;
 	res = FREGetObjectAsUint32(argv[0], &kbd_id);
-	// error handling
+	if (res != FRE_OK) return nullptr;
 
 	FREObject ret;
 	FRENewObjectFromUint32(mk_instance->get_frame_action(kbd_id), &ret);
@@ -62,35 +67,38 @@ FREObject mk_getframeaction(FREContext ctx, void *funcData, uint32_t argc, FREOb
 }
 
 FREObject mk_setinputmapping(FREContext ctx, void *funcData, uint32_t argc, FREObject argv[]) {
-	assert(argc == 4);
+	//assert(argc == 4);
+	if (argc != 4) return nullptr;
 
 	FREResult res;
 	uint32_t kbd_id;
 	res = FREGetObjectAsUint32(argv[0], &kbd_id);
+	if (res != FRE_OK) return nullptr;
 	uint32_t key;
 	res = FREGetObjectAsUint32(argv[1], &key);
+	if (res != FRE_OK) return nullptr;
 	uint32_t val;
 	res = FREGetObjectAsUint32(argv[2], &val);
+	if (res != FRE_OK) return nullptr;
 	uint32_t is_ui;
 	res = FREGetObjectAsBool(argv[3], &is_ui);
-	// error handling
+	if (res != FRE_OK) return nullptr;
 
-	FREObject ret = nullptr;
-	// null?
 	mk_instance->set_mapping(kbd_id, key, val, (bool)is_ui);
-	return ret;
+	return nullptr;
 }
 
 FREObject mk_clearinputmappings(FREContext ctx, void *funcData, uint32_t argc, FREObject argv[]) {
-	assert(argc == 2);
+	//assert(argc == 2);
+	if (argc != 2) return nullptr;
 
 	FREResult res;
 	uint32_t kbd_id;
 	res = FREGetObjectAsUint32(argv[0], &kbd_id);
-	// error handling
+	if (res != FRE_OK) return nullptr;
 	uint32_t is_ui;
 	res = FREGetObjectAsBool(argv[1], &is_ui);
-	// error handling
+	if (res != FRE_OK) return nullptr;
 
 	FREObject ret = nullptr;
 	mk_instance->clear_mappings(kbd_id, (bool)is_ui);
@@ -98,12 +106,13 @@ FREObject mk_clearinputmappings(FREContext ctx, void *funcData, uint32_t argc, F
 }
 
 FREObject mk_getkeyboardname(FREContext ctx, void *funcData, uint32_t argc, FREObject argv[]) {
-	assert(argc == 1);
+	//assert(argc == 1);
+	if (argc != 1) return nullptr;
 
 	FREResult res;
 	uint32_t kbd_id;
 	res = FREGetObjectAsUint32(argv[0], &kbd_id);
-	// error handling
+	if (res != FRE_OK) return nullptr;
 
 	FREObject ret;
 	std::string st = mk_instance->get_name(kbd_id);

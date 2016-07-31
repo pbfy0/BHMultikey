@@ -37,7 +37,7 @@ RawKeyboard::~RawKeyboard()
 
 void RawKeyboard::tick()
 {
-	frame_action = 0;
+	if(id != 0) frame_action = 0;
 }
 
 unsigned RawKeyboard::get_down_state(bool is_ui)
