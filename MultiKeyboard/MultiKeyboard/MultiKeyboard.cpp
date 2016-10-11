@@ -47,6 +47,8 @@ void MultiKeyboard::handle_raw_input(HRAWINPUT ri)
 	USHORT virtualKeyCode = raw->data.keyboard.VKey;
 	bool keyPressed = raw->data.keyboard.Flags & RI_KEY_BREAK ? false : true;
 	HANDLE dev = raw->header.hDevice;
+	
+	delete[] dataBuffer;
 
 	RawKeyboard *rk;
 	if (h_kbs.find(dev) == h_kbs.end()) {
