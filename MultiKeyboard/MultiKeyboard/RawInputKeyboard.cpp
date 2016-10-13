@@ -52,6 +52,8 @@ void RawInputKeyboard::handle_input(LPARAM lParam) {
 	bool keyPressed = raw->data.keyboard.Flags & RI_KEY_BREAK ? false : true;
 	HANDLE dev = raw->header.hDevice;
 
+	delete[] dataBuffer;
+
 	if (virtualKeyCode == VK_SHIFT) {
 		virtualKeyCode = VK_OEM_3;
 	}

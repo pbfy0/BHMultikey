@@ -45,9 +45,6 @@ LRESULT MessageKeyboard::handle_message(UINT message, WPARAM wParam, LPARAM lPar
 	case MK_KEYUP | MK_ISUI:
 		kbs[wParam-1]->handle_input(lParam, false, message & MK_ISUI);
 		break;
-	case MK_GETSTATE:
-	case MK_GETSTATE | MK_ISUI:
-		return message & MK_ISUI ? kbs[wParam - 1]->ui_state : kbs[wParam - 1]->g_state;
 	case MK_ACTIVATE:
 		mk_instance->add_kbd(kbs[wParam - 1]);
 		break;

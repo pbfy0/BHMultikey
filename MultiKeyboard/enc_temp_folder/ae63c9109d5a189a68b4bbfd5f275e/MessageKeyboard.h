@@ -9,7 +9,6 @@
 #define MK_REMOVE 0x1002
 #define MK_KEYDOWN 0x1010
 #define MK_KEYUP 0x1012
-#define MK_GETSTATE 0x1014
 #define MK_ISUI 1
 #define MK_ADDNAME 0x1020
 #define MK_POLLONE 0x1030

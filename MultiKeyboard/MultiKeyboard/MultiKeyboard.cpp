@@ -19,11 +19,15 @@ LRESULT CALLBACK _wnd_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
 		RawInputKeyboard::handle_input(lParam);
 		break;
 	case MK_KEYDOWN:
+	case MK_KEYDOWN | MK_ISUI:
 	case MK_KEYUP:
+	case MK_KEYUP | MK_ISUI:
 	case MK_ADD:
+	case MK_ACTIVATE:
 	case MK_REMOVE:
-		MessageKeyboard::handle_message(message, wParam, lParam);
-		break;
+	case MK_POLLONE:
+	case MK_ADDNAME:
+		return MessageKeyboard::handle_message(message, wParam, lParam);
 	default:
 		return DefWindowProc(hWnd, message, wParam, lParam);
 	}
@@ -56,7 +60,7 @@ void MultiKeyboard::add_kbd(Keyboard *k)
 
 void MultiKeyboard::remove_kbd(Keyboard *k)
 {
-	kbs[k->id] = nullptr;
+	if(k->id != 0) kbs[k->id - 1] = nullptr;
 }
 
 bool MultiKeyboard::win_init()
@@ -96,6 +100,10 @@ bool MultiKeyboard::win_init()
 	input_device[0].hwndTarget = hwnd;
 	bool res = RegisterRawInputDevices(input_device, 1, sizeof(input_device[0]));
 	if (!res) return false;
+
+	wchar_t x[128];
+	_snwprintf_s(x, 100, _TRUNCATE, L"Capture hwnd: %p", hwnd);
+	OutputDebugString(x);
 
 	/*unsigned n_devices;
 	GetRawInputDeviceList(nullptr, &n_devices, sizeof(RAWINPUTDEVICELIST));
