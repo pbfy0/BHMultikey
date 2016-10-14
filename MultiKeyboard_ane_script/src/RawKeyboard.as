@@ -10,8 +10,6 @@ package
 		
 		public var mKeyboardID:uint;
 		
-		private var i:uint;
-		
 		public function RawKeyboard(param1:uint, param2:ExtensionContext)
 		{
 			super();
