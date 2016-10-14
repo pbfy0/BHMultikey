@@ -12,8 +12,9 @@ FREObject mk_init(FREContext ctx, void *funcData, uint32_t argc, FREObject argv[
 	//assert(argc == 0);
 	if (argc != 0) return nullptr;
 
+	mk_instance = new MultiKeyboard();
 	FREObject ret;
-	FRENewObjectFromBool(mk_instance->init(), &ret);
+	FRENewObjectFromBool(mk_instance != nullptr, &ret);
 	return ret;
 }
 
@@ -128,8 +129,6 @@ void contextInitializer(
 	FREContext ctx,
 	uint32_t *n_functions,
 	const FRENamedFunction **function_table) {
-
-	mk_instance = new MultiKeyboard();
 
 	static FRENamedFunction extension_funcs[] = {
 		{ (const uint8_t *) "MultiKeyboard_Init", nullptr, mk_init },

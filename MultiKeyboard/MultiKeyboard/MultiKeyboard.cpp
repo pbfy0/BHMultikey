@@ -2,6 +2,7 @@
 #include <future>
 
 #include "MultiKeyboard.h"
+#include "MessageKeyboard.h"
 #include "dllMain.h"
 
 
@@ -11,11 +12,22 @@ BOOL CALLBACK _enum_proc_callback(HWND hwnd, LPARAM lParam) {
 	return self->enum_proc_callback(hwnd);
 }
 
+
 LRESULT CALLBACK _wnd_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
 	switch (message) {
 	case WM_INPUT:
-		mk_instance->handle_raw_input((HRAWINPUT)lParam);
+		RawInputKeyboard::handle_input(lParam);
 		break;
+	case MK_KEYDOWN:
+	case MK_KEYDOWN | MK_ISUI:
+	case MK_KEYUP:
+	case MK_KEYUP | MK_ISUI:
+	case MK_ADD:
+	case MK_ACTIVATE:
+	case MK_REMOVE:
+	case MK_POLLONE:
+	case MK_ADDNAME:
+		return MessageKeyboard::handle_message(message, wParam, lParam);
 	default:
 		return DefWindowProc(hWnd, message, wParam, lParam);
 	}
@@ -26,6 +38,12 @@ MultiKeyboard::MultiKeyboard()
 {
 	hwnd = 0;
 	wclAtom = 0;
+
+	pid = GetCurrentProcessId();
+	EnumWindows(_enum_proc_callback, (LPARAM)this);
+
+	if (!win_init()) throw new std::exception("Error initializing MultiKeyboard window");
+
 }
 
 
@@ -35,41 +53,17 @@ MultiKeyboard::~MultiKeyboard()
 	if(wclAtom) UnregisterClass((LPCWSTR)wclAtom, dll_module);
 }
 
-void MultiKeyboard::handle_raw_input(HRAWINPUT ri)
+void MultiKeyboard::add_kbd(Keyboard *k)
 {
-	UINT bufferSize;
-	GetRawInputData(ri, RID_INPUT, NULL, &bufferSize, sizeof(RAWINPUTHEADER));
-	LPBYTE dataBuffer = new BYTE[bufferSize];
-
-	GetRawInputData(ri, RID_INPUT, dataBuffer, &bufferSize, sizeof(RAWINPUTHEADER));
-	RAWINPUT* raw = (RAWINPUT*)dataBuffer;
-
-	USHORT virtualKeyCode = raw->data.keyboard.VKey;
-	bool keyPressed = raw->data.keyboard.Flags & RI_KEY_BREAK ? false : true;
-	HANDLE dev = raw->header.hDevice;
-	
-	delete[] dataBuffer;
-
-	RawKeyboard *rk;
-	if (h_kbs.find(dev) == h_kbs.end()) {
-		rk = add_kbd(dev);
-	} else {
-		rk = h_kbs[dev];
-	}
-	rk->handle_input(virtualKeyCode, keyPressed);
+	unassigned_kbs.push(k);
 }
 
-RawKeyboard * MultiKeyboard::add_kbd(HANDLE h)
+void MultiKeyboard::remove_kbd(Keyboard *k)
 {
-	RawKeyboard *rk = new RawKeyboard(h);
-	h_kbs[h] = rk;
-	unassigned_kbs.push(rk);
-	return rk;
+	if(k->id != 0) kbs[k->id - 1] = nullptr;
 }
 
-
-
-bool MultiKeyboard::c_init()
+bool MultiKeyboard::win_init()
 {
 	WNDCLASS wcl;
 	wcl.style = CS_OWNDC;
@@ -107,6 +101,10 @@ bool MultiKeyboard::c_init()
 	bool res = RegisterRawInputDevices(input_device, 1, sizeof(input_device[0]));
 	if (!res) return false;
 
+	wchar_t x[128];
+	_snwprintf_s(x, 100, _TRUNCATE, L"Capture hwnd: %p", hwnd);
+	OutputDebugString(x);
+
 	/*unsigned n_devices;
 	GetRawInputDeviceList(nullptr, &n_devices, sizeof(RAWINPUTDEVICELIST));
 	RAWINPUTDEVICELIST *list = new RAWINPUTDEVICELIST[n_devices];
@@ -134,25 +132,17 @@ bool MultiKeyboard::enum_proc_callback(HWND hwnd) {
 	return true;
 }
 
-bool MultiKeyboard::init()
-{
-	pid = GetCurrentProcessId();
-	EnumWindows(_enum_proc_callback, (LPARAM)this);
-
-	return c_init();
-}
-
 unsigned MultiKeyboard::activate()
 {
-	RawKeyboard *kb = unassigned_kbs.front();
+	Keyboard *kb = unassigned_kbs.front();
 	unassigned_kbs.pop();
 
 	
 	kbs.push_back(kb);
 	unsigned id = kbs.size();
-	wchar_t x[100];
-	_snwprintf_s(x, 100, _TRUNCATE, L"Assigned id %d to handle %p", id, kb->handle);
-	OutputDebugString(x);
+	//wchar_t x[100];
+	//_snwprintf_s(x, 100, _TRUNCATE, L"Assigned id %d to handle %p", id, kb->handle);
+	//OutputDebugString(x);
 	kb->id = id;
 	return id;
 }
@@ -168,7 +158,8 @@ unsigned MultiKeyboard::tick_messages()
 	has_focus = (GetActiveWindow() == air_hwnd || air_hwnd == 0);
 
 	for (auto const& val : kbs) {
-		val->tick();
+		if(val != nullptr)
+			val->tick();
 	}
 
 	return unassigned_kbs.size();
@@ -177,26 +168,31 @@ unsigned MultiKeyboard::tick_messages()
 unsigned MultiKeyboard::get_down_state(uint32_t kbd_id, bool is_ui)
 {
 	if (!has_focus) return 0;
+	if (kbs[kbd_id - 1] == nullptr) return -1;
 	return kbs[kbd_id - 1/*is_ui ? id : (n_kbs - 1) - id*/]->get_down_state(is_ui);
 }
 
 unsigned MultiKeyboard::get_frame_action(uint32_t kbd_id)
 {
 	if (!has_focus) return 0;
+	if (kbs[kbd_id - 1] == nullptr) return -1;
 	return kbs[kbd_id - 1]->get_frame_action();
 }
 
 void MultiKeyboard::set_mapping(uint32_t kbd_id, uint32_t key, uint32_t val, bool is_ui)
 {
+	if (kbs[kbd_id - 1] == nullptr) return;
 	kbs[kbd_id - 1]->set_mapping(key, val, is_ui);
 }
 
 void MultiKeyboard::clear_mappings(uint32_t kbd_id, bool is_ui)
 {
+	if (kbs[kbd_id - 1] == nullptr) return;
 	kbs[kbd_id - 1]->clear_mappings(is_ui);
 }
 
 std::string MultiKeyboard::get_name(uint32_t kbd_id)
 {
+	if (kbs[kbd_id - 1] == nullptr) return "";
 	return kbs[kbd_id - 1]->get_name();
 }

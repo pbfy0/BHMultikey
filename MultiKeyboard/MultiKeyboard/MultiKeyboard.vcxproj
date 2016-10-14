@@ -153,13 +153,18 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="dllMain.cpp" />
+    <ClCompile Include="Keyboard.cpp" />
+    <ClCompile Include="MessageKeyboard.cpp" />
     <ClCompile Include="MultiKeyboard.cpp" />
-    <ClCompile Include="RawKeyboard.cpp" />
+    <ClCompile Include="RawInputKeyboard.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dllMain.h" />
+    <ClInclude Include="Keyboard.h" />
+    <ClInclude Include="MessageKeyboard.h" />
     <ClInclude Include="MultiKeyboard.h" />
-    <ClInclude Include="RawKeyboard.h" />
+    <ClInclude Include="RawInputKeyboard.h" />
+    <ClInclude Include="resource.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

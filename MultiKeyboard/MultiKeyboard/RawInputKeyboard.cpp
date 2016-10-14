@@ -1,8 +1,11 @@
-#include "RawKeyboard.h"
+#include "RawInputKeyboard.h"
+#include "dllMain.h"
 
 #include <Windows.h>
 
-RawKeyboard::RawKeyboard(HANDLE h)
+std::map<HANDLE, RawInputKeyboard *> RawInputKeyboard::h_kbs;
+
+RawInputKeyboard::RawInputKeyboard(HANDLE h)
 {
 	handle = h;
 	id = 0;
@@ -32,16 +35,47 @@ RawKeyboard::RawKeyboard(HANDLE h)
 }
 
 
-RawKeyboard::~RawKeyboard()
+RawInputKeyboard::~RawInputKeyboard()
 {
 }
 
-void RawKeyboard::tick()
+void RawInputKeyboard::handle_input(LPARAM lParam) {
+	HRAWINPUT ri = (HRAWINPUT)lParam;
+	UINT bufferSize;
+	GetRawInputData(ri, RID_INPUT, NULL, &bufferSize, sizeof(RAWINPUTHEADER));
+	LPBYTE dataBuffer = new BYTE[bufferSize];
+
+	GetRawInputData(ri, RID_INPUT, dataBuffer, &bufferSize, sizeof(RAWINPUTHEADER));
+	RAWINPUT* raw = (RAWINPUT*)dataBuffer;
+
+	USHORT virtualKeyCode = raw->data.keyboard.VKey;
+	bool keyPressed = raw->data.keyboard.Flags & RI_KEY_BREAK ? false : true;
+	HANDLE dev = raw->header.hDevice;
+
+	delete[] dataBuffer;
+
+	if (virtualKeyCode == VK_SHIFT) {
+		virtualKeyCode = VK_OEM_3;
+	}
+
+	RawInputKeyboard *rk;
+	if (h_kbs.find(dev) == h_kbs.end()) {
+		h_kbs[dev] = rk = new RawInputKeyboard(dev);
+		mk_instance->add_kbd(rk);
+	}
+	else {
+		rk = h_kbs[dev];
+	}
+	rk->handle_input(virtualKeyCode, keyPressed);
+
+}
+
+void RawInputKeyboard::tick()
 {
 	if(id != 0) frame_action = 0;
 }
 
-unsigned RawKeyboard::get_down_state(bool is_ui)
+unsigned RawInputKeyboard::get_down_state(bool is_ui)
 {
 	/*i = (i + 1) % 60;
 	if (i == 0) {
@@ -52,22 +86,22 @@ unsigned RawKeyboard::get_down_state(bool is_ui)
 	return is_ui ? ui_state : g_state;
 }
 
-unsigned RawKeyboard::get_frame_action()
+unsigned RawInputKeyboard::get_frame_action()
 {
 	return frame_action;
 }
 
-void RawKeyboard::set_mapping(uint32_t key, uint32_t val, bool is_ui)
+void RawInputKeyboard::set_mapping(uint32_t key, uint32_t val, bool is_ui)
 {
 	(is_ui ? ui_map : g_map)[key] = val;
 }
 
-void RawKeyboard::clear_mappings(bool is_ui)
+void RawInputKeyboard::clear_mappings(bool is_ui)
 {
 	(is_ui ? ui_map : g_map).clear();
 }
 
-std::string RawKeyboard::get_name()
+std::string RawInputKeyboard::get_name()
 {
 	//return name;
 	char x[100];
@@ -75,7 +109,7 @@ std::string RawKeyboard::get_name()
 	return std::string(x);
 }
 
-void RawKeyboard::handle_input(uint32_t key, bool down)
+void RawInputKeyboard::handle_input(uint32_t key, bool down)
 {
 	/*wchar_t msg[100];
 	_snwprintf_s(msg, 100, _TRUNCATE, L"id %d key %d down %d", id, key, down);
