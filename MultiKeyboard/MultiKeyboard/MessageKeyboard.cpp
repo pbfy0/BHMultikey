@@ -24,8 +24,6 @@ void MessageKeyboard::handle_input(uint32_t keyval, bool pressed, bool is_ui) {
 	}
 }
 
-#define kb_bad(var) (var > kbs.size() || kbs[var-1] == nullptr)
-
 LRESULT MessageKeyboard::handle_message(UINT message, WPARAM wParam, LPARAM lParam)
 {
 	MessageKeyboard *kb = nullptr;
@@ -77,7 +75,7 @@ LRESULT MessageKeyboard::handle_message(UINT message, WPARAM wParam, LPARAM lPar
 		if (kb->map_queue.empty()) return 0;
 		uint32_t v = kb->map_queue.front();
 		kb->map_queue.pop();
-		return kb->id << 16 | v;
+		return v;
 	}
 	}
 	return 0;
@@ -99,13 +97,13 @@ unsigned MessageKeyboard::get_frame_action() {
 void MessageKeyboard::set_mapping(uint32_t key, uint32_t val, bool is_ui) {
 	//unsigned long v;
 	//_BitScanReverse(&v, val);
-	map_queue.push(key | (val & 0x7fffff) << 8 | is_ui << 31);
+	map_queue.push((key & 0xff) | ((val & 0x7fffff) << 8) | (is_ui << 31));
 	//PostMessage(hwnd, is_ui ? MK_MAPPING_UI : MK_MAPPING_GAME, id, );
 }
 
 void MessageKeyboard::clear_mappings(bool is_ui) {
 	map_queue.empty();
-	map_queue.push(0x7fffffff | is_ui << 31);
+	map_queue.push(0x7fffffff | (is_ui << 31));
 	//PostMessage(hwnd, is_ui ? MK_CLEARMAP_GAME : MK_CLEARMAP_GAME, id, 0);
 }
 
